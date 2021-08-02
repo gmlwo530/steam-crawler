@@ -4,12 +4,16 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gmlwo530/steam-crawler/db"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	e := echo.New()
+
+	dbObj := db.GetDB()
+	defer dbObj.Close()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())

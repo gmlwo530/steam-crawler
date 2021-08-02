@@ -2,9 +2,10 @@ FROM golang:1.16-alpine
 
 WORKDIR /app
 
-COPY go.mod go.sum *.go ./
+COPY . ./
 
-RUN go mod download && \
+RUN apk add --update gcc musl-dev && \ 
+    go mod download && \
     go build -o /steam-crawler
 
 EXPOSE 8080

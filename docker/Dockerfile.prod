@@ -2,9 +2,11 @@ FROM golang:1.16-buster AS build
 
 WORKDIR /app
 
-COPY go.mod go.sum *.go ./
+COPY . ./
 
-RUN go mod download && \
+RUN apt-get update && \ 
+    apt-get install gcc musl-dev && \ 
+    go mod download && \
     go build -o /steam-crawler
 
 
