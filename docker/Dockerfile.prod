@@ -7,7 +7,8 @@ COPY . ./
 RUN apt-get update && \ 
     apt-get install gcc musl-dev && \ 
     go mod download && \
-    go build -o /steam-crawler
+    go build -o /steam-crawler && \
+    mkdir /mydb
 
 
 FROM gcr.io/distroless/base-debian10
@@ -15,6 +16,7 @@ FROM gcr.io/distroless/base-debian10
 WORKDIR /
 
 COPY --from=build /steam-crawler /steam-crawler
+COPY --from=build /mydb /mydb
 
 EXPOSE 8080
 

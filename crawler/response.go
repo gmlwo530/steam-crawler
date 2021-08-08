@@ -1,12 +1,12 @@
-package db
+package crawler
 
-type IndieApp struct {
+type IndieAppRes struct {
 	AppId          int `json:"appid"`
 	AverageForever int `json:"average_forever"` // average playtime since March 2009. In minutes.
 	Ccu            int `json:"ccu"`             // peak CCU yesterday.
 }
 
-type AppDetailResp struct {
+type AppDetailRes struct {
 	Success bool
 	Data    AppDetail
 }
@@ -19,8 +19,8 @@ type AppGenre struct {
 
 type AppScreenshot struct {
 	Id            int
-	PathThumbnail string
-	PathFull      string
+	PathThumbnail string `json:"path_thumbnail"`
+	PathFull      string `json:"path_full"`
 	AppId         int
 }
 

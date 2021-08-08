@@ -8,6 +8,6 @@ RUN apk add --update gcc musl-dev && \
     go mod download && \
     go build -o /steam-crawler
 
-EXPOSE 8080
+# EXPOSE 8080
 
 CMD [ "/steam-crawler" ]

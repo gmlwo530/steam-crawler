@@ -1,35 +1,22 @@
 package main
 
 import (
-	"net/http"
+	"log"
 	"os"
+	"time"
 
-	"github.com/gmlwo530/steam-crawler/db"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/gmlwo530/steam-crawler/crawler"
+	"github.com/gmlwo530/steam-crawler/database"
 )
 
 func main() {
-	e := echo.New()
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	dbObj := db.GetDB()
-	defer dbObj.Close()
+	db := database.GetDB(database.SQLITE3)
 
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	crawler.GetIndieAppList(db)
+	crawler.UpdateIndieApp(db, 10, time.Second*5, true)
 
-	e.GET("/", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, "Hello, Docker!")
-	})
-
-	e.GET("/ping", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, struct{ Status string }{Status: "OK"})
-	})
-
-	httpPort := os.Getenv("HTTP_PORT")
-	if httpPort == "" {
-		httpPort = "8080"
-	}
-
-	e.Logger.Fatal(e.Start(":" + httpPort))
+	log.Println("Crawling is Done!")
+	os.Exit(100)
 }
