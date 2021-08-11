@@ -37,12 +37,13 @@ type AppReleaseDate struct {
 }
 
 type AppDetail struct {
-	Name                string
-	AppId               int `json:"steam_appid"`
-	IsFree              bool
-	DetailedDescription string         `json:"detailed_description"`
-	ReleaseDate         AppReleaseDate `json:"release_date"`
-	Genres              []AppGenre
-	Screenshots         []AppScreenshot
-	Movies              []AppMovie
+	Name             string
+	AppId            int `json:"steam_appid"`
+	IsFree           bool
+	HeaderImage      string         `json:"header_image"`
+	ShortDescription string         `json:"short_description"`
+	ReleaseDate      AppReleaseDate `json:"release_date"`
+	Genres           []AppGenre
+	Screenshots      []AppScreenshot
+	Movies           []AppMovie
 }

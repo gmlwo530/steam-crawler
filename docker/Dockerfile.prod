@@ -18,8 +18,6 @@ WORKDIR /
 COPY --from=build /steam-crawler /steam-crawler
 COPY --from=build /mydb /mydb
 
-EXPOSE 8080
-
 USER nonroot:nonroot
 
 ENTRYPOINT ["/steam-crawler"]

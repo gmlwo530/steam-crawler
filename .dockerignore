@@ -2,3 +2,5 @@
 .gitignore
 docker
 *.db
+.env
+.env.sample

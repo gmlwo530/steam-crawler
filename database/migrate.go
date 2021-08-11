@@ -1,6 +1,9 @@
 package database
 
-import "gorm.io/gorm"
+import (
+	"github.com/gmlwo530/steam-crawler/config"
+	"gorm.io/gorm"
+)
 
 type constraintChild struct {
 	KeyName string
@@ -14,7 +17,13 @@ func Migrate(db *gorm.DB, dt dbType) {
 
 	migrator := db.Migrator()
 
-	createTable(migrator, []interface{}{&IndieApp{}, &Movie{}, &Screenshot{}, &IndieAppDetail{}})
+	tables := []interface{}{&IndieApp{}, &Movie{}, &Screenshot{}, &IndieAppDetail{}, &Genre{}}
+
+	if config.GetConfig().Debug {
+		dropTables(migrator, tables)
+	}
+
+	createTable(migrator, tables)
 
 	createConstraint(migrator, &IndieApp{}, []constraintChild{
 		{
@@ -28,6 +37,10 @@ func Migrate(db *gorm.DB, dt dbType) {
 		{
 			KeyName: "IndieAppDetails",
 			FkName:  "fk_indie_apps_indie_app_details",
+		},
+		{
+			KeyName: "Genres",
+			FkName:  "fk_indie_apps_genres",
 		},
 	})
 }
@@ -48,6 +61,14 @@ func createConstraint(migrator gorm.Migrator, parent interface{}, childs []const
 
 		if !migrator.HasConstraint(parent, child.FkName) {
 			migrator.CreateConstraint(parent, child.FkName)
+		}
+	}
+}
+
+func dropTables(migrator gorm.Migrator, tables []interface{}) {
+	for _, table := range tables {
+		if migrator.HasTable(table) {
+			migrator.DropTable(table)
 		}
 	}
 }

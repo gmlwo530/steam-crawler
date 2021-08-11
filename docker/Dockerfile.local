@@ -6,8 +6,7 @@ COPY . ./
 
 RUN apk add --update gcc musl-dev && \ 
     go mod download && \
-    go build -o /steam-crawler
+    go build -o /$APP_NAME && \
+    chmod +x ./scripts/init.sh
 
-# EXPOSE 8080
-
-CMD [ "/steam-crawler" ]
+ENTRYPOINT [ "./scripts/init.sh" ]

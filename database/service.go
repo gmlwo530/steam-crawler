@@ -9,7 +9,7 @@ import (
 func CountIndieApp(db *gorm.DB) int64 {
 	var count int64
 
-	result := db.Model(&IndieApp{}).Distinct("indie_app_id").Count(&count)
+	result := db.Table("indie_apps").Distinct("indie_app_id").Count(&count)
 
 	log.Printf("Count: %d", count)
 
@@ -24,6 +24,8 @@ func getCrawledIndieAppIds(db *gorm.DB) []int64 {
 	result := db.Table("indie_app_details").Select("indie_app_id").Find(&indieAppIds)
 
 	checkError(result)
+
+	log.Println(indieAppIds)
 
 	return indieAppIds
 }
@@ -44,7 +46,7 @@ func CreateIndieApps(db *gorm.DB, indieApps []IndieApp) {
 
 	for i := 0; i < loopCount+1; i++ {
 		rangeEnd := i*batchSize + batchSize
-		if rangeEnd < len(indieApps) {
+		if rangeEnd > len(indieApps) {
 			rangeEnd = len(indieApps)
 		}
 
