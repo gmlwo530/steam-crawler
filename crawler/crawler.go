@@ -49,14 +49,14 @@ func GetIndieAppList(db *gorm.DB) {
 	database.CreateIndieApps(db, indieApps)
 }
 
-func UpdateIndieApp(db *gorm.DB, timeSleep time.Duration) {
+func UpdateIndieApp(db *gorm.DB, timeSleep time.Duration, offset int) {
 	c := make(chan database.IndieApp)
 	errC := make(chan string)
 
 	notCrawledIndieApps := database.GetNotCrawledIndieApps(db)
 
 	if config.GetConfig().Debug {
-		debugOffset := 10
+		debugOffset := 100
 		if len(notCrawledIndieApps) < debugOffset {
 			debugOffset = len(notCrawledIndieApps)
 		}
@@ -65,20 +65,24 @@ func UpdateIndieApp(db *gorm.DB, timeSleep time.Duration) {
 
 	languages := []string{"korean", "english"}
 
-	for _, indieApp := range notCrawledIndieApps {
-		for _, lang := range languages {
-			go getAppDetail(indieApp, lang, c, errC)
-			time.Sleep(timeSleep)
-		}
-	}
+	for i := 0; i < len(notCrawledIndieApps); i += offset {
+		notCrawledIndieAppsPartial := notCrawledIndieApps[i*offset : i*offset+offset]
 
-	for i := 0; i < len(notCrawledIndieApps)*len(languages); i++ {
-		select {
-		case indieApp := <-c:
-			db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&indieApp)
-		case errStr := <-errC:
-			log.Println(errStr)
+		for _, indieApp := range notCrawledIndieAppsPartial {
+			for _, lang := range languages {
+				go getAppDetail(indieApp, lang, c, errC)
+			}
 		}
+
+		for i := 0; i < len(notCrawledIndieAppsPartial)*len(languages); i++ {
+			select {
+			case indieApp := <-c:
+				db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&indieApp)
+			case errStr := <-errC:
+				log.Println(errStr)
+			}
+		}
+		time.Sleep(timeSleep)
 	}
 }
 

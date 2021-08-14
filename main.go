@@ -18,7 +18,7 @@ func main() {
 	db := database.GetDB(database.MYSQL)
 
 	crawler.GetIndieAppList(db)
-	crawler.UpdateIndieApp(db, time.Second*2)
+	crawler.UpdateIndieApp(db, time.Second*2, 10)
 
 	log.Println("Crawling is Done!")
 	os.Exit(100)
