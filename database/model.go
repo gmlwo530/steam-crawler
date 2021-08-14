@@ -18,17 +18,19 @@ type IndieApp struct {
 }
 
 type Movie struct {
-	MovieId    uint `gorm:"primarykey;column:movie_id"`
-	Name       string
-	Mp4        string
-	IndieAppId uint
+	MovieId      uint `gorm:"primarykey;column:movie_id"`
+	Name         string
+	Mp4          string
+	SteamMovieId uint
+	IndieAppId   uint
 }
 
 type Screenshot struct {
-	ScreenshotId  uint `gorm:"primarykey;column:screenshot_id"`
-	PathThumbnail string
-	PathFull      string
-	IndieAppId    uint
+	ScreenshotId      uint `gorm:"primarykey;column:screenshot_id"`
+	PathThumbnail     string
+	PathFull          string
+	SteamScreenshotId uint
+	IndieAppId        uint
 }
 
 type IndieAppDetail struct {
@@ -41,8 +43,9 @@ type IndieAppDetail struct {
 }
 
 type Genre struct {
-	GenreId     uint `gorm:"primarykey;column:genre_id"`
-	Description string
-	Language    string
-	IndieAppId  uint
+	GenreId      uint `gorm:"primarykey;column:genre_id"`
+	Description  string
+	Language     string
+	SteamGenreId uint
+	IndieAppId   uint
 }

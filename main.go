@@ -15,10 +15,10 @@ func main() {
 
 	config.InitConfig()
 
-	db := database.GetDB(database.SQLITE3)
+	db := database.GetDB(database.MYSQL)
 
 	crawler.GetIndieAppList(db)
-	crawler.UpdateIndieApp(db, time.Second*3)
+	crawler.UpdateIndieApp(db, time.Second*2)
 
 	log.Println("Crawling is Done!")
 	os.Exit(100)

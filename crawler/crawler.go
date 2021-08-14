@@ -56,19 +56,23 @@ func UpdateIndieApp(db *gorm.DB, timeSleep time.Duration) {
 	notCrawledIndieApps := database.GetNotCrawledIndieApps(db)
 
 	if config.GetConfig().Debug {
-		debugOffset := 20
+		debugOffset := 10
 		if len(notCrawledIndieApps) < debugOffset {
 			debugOffset = len(notCrawledIndieApps)
 		}
 		notCrawledIndieApps = notCrawledIndieApps[:debugOffset]
 	}
 
+	languages := []string{"korean", "english"}
+
 	for _, indieApp := range notCrawledIndieApps {
-		go getAppDetail(indieApp, c, errC)
-		time.Sleep(timeSleep)
+		for _, lang := range languages {
+			go getAppDetail(indieApp, lang, c, errC)
+			time.Sleep(timeSleep)
+		}
 	}
 
-	for i := 0; i < len(notCrawledIndieApps); i++ {
+	for i := 0; i < len(notCrawledIndieApps)*len(languages); i++ {
 		select {
 		case indieApp := <-c:
 			db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&indieApp)
@@ -78,79 +82,62 @@ func UpdateIndieApp(db *gorm.DB, timeSleep time.Duration) {
 	}
 }
 
-func getAppDetail(indieApp database.IndieApp, c chan<- database.IndieApp, errC chan<- string) {
+func getAppDetail(indieApp database.IndieApp, lang string, c chan<- database.IndieApp, errC chan<- string) {
 	strAppId := strconv.Itoa(int(indieApp.AppId))
 
-	languages := []string{"korean", "english"}
+	resp, err := http.Get(storeApiUrl + "/api/appdetails?appids=" + strAppId + "&l=" + lang)
 
-	langAppDetails := make(map[string]AppDetail)
-	var errStrs []string
-
-	for _, lang := range languages {
-		resp, err := http.Get(storeApiUrl + "/api/appdetails?appids=" + strAppId + "&l=" + lang)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer resp.Body.Close()
-
-		var apr map[string]AppDetailRes
-		err = json.NewDecoder(resp.Body).Decode(&apr)
-
-		if err != nil {
-			errStrs = append(errStrs, fmt.Sprintf("Error appId: %s, err: %+v", strAppId, err))
-		} else {
-			langAppDetails[lang] = apr[strAppId].Data
-		}
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if len(errStrs) > 0 {
-		errC <- fmt.Sprintf("Errors : %+v", errStrs)
+	defer resp.Body.Close()
+
+	var apr map[string]AppDetailRes
+	err = json.NewDecoder(resp.Body).Decode(&apr)
+
+	if err != nil {
+		errC <- fmt.Sprintf("Error appId: %s, err: %+v", strAppId, err)
 	} else {
-		for lang, appDetail := range langAppDetails {
-			if lang == languages[0] {
-				for _, val := range appDetail.Movies {
-					indieApp.Movies = append(indieApp.Movies, database.Movie{
-						MovieId: uint(val.Id),
-						Name:    val.Name,
-						Mp4:     val.Mp4["480"],
-					})
-				}
-
-				for _, val := range appDetail.Screenshots {
-					indieApp.Screenshots = append(indieApp.Screenshots, database.Screenshot{
-						ScreenshotId:  uint(val.Id),
-						PathThumbnail: val.PathThumbnail,
-						PathFull:      val.PathFull,
-					})
-				}
-
-				indieApp.HeaderImage = sql.NullString{String: appDetail.HeaderImage, Valid: true}
-				indieApp.IsFree = sql.NullBool{Bool: appDetail.IsFree, Valid: true}
-			}
-
-			for _, val := range appDetail.Genres {
-				id, err := strconv.Atoi(val.Id)
-				if err != nil {
-					log.Fatalf("Wrong genre ID: %s", val.Id)
-					continue
-				}
-				indieApp.Genres = append(indieApp.Genres, database.Genre{
-					GenreId:     uint(id),
-					Description: val.Description,
-					Language:    lang,
-				})
-			}
-
-			indieApp.IndieAppDetails = append(indieApp.IndieAppDetails, database.IndieAppDetail{
-				AppDetailId:      uint(appDetail.AppId),
-				Name:             appDetail.Name,
-				ReleaseDate:      appDetail.ReleaseDate.Date,
-				ShortDescription: appDetail.ShortDescription,
-				Language:         lang,
+		appDetail := apr[strAppId].Data
+		for _, val := range appDetail.Movies {
+			indieApp.Movies = append(indieApp.Movies, database.Movie{
+				SteamMovieId: uint(val.Id),
+				Name:         val.Name,
+				Mp4:          val.Mp4["480"],
 			})
 		}
+
+		for _, val := range appDetail.Screenshots {
+			indieApp.Screenshots = append(indieApp.Screenshots, database.Screenshot{
+				SteamScreenshotId: uint(val.Id),
+				PathThumbnail:     val.PathThumbnail,
+				PathFull:          val.PathFull,
+			})
+		}
+
+		for _, val := range appDetail.Genres {
+			id, err := strconv.Atoi(val.Id)
+			if err != nil {
+				log.Fatalf("Wrong genre ID: %s", val.Id)
+				continue
+			}
+			indieApp.Genres = append(indieApp.Genres, database.Genre{
+				SteamGenreId: uint(id),
+				Description:  val.Description,
+				Language:     lang,
+			})
+		}
+
+		indieApp.IndieAppDetails = append(indieApp.IndieAppDetails, database.IndieAppDetail{
+			Name:             appDetail.Name,
+			ReleaseDate:      appDetail.ReleaseDate.Date,
+			ShortDescription: appDetail.ShortDescription,
+			Language:         lang,
+		})
+
+		indieApp.HeaderImage = sql.NullString{String: appDetail.HeaderImage, Valid: true}
+		indieApp.IsFree = sql.NullBool{Bool: appDetail.IsFree, Valid: true}
 
 		c <- indieApp
 	}

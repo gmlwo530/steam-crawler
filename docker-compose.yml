@@ -5,12 +5,14 @@ services:
     build:
       context: .
       dockerfile: ./docker/Dockerfile.local
-    env_file: 
+    env_file:
       - .env
     depends_on:
       - db
 
   db:
     image: mysql:5.7.34
-    env_file: 
+    volumes:
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+    env_file:
       - .env
