@@ -13,6 +13,7 @@ services:
   db:
     image: mysql:5.7.34
     volumes:
+      - ./docker/mysql/data:/var/lib/mysql
       - ./docker/mysql/conf.d:/etc/mysql/conf.d
     env_file:
       - .env
