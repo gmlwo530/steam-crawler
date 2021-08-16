@@ -65,8 +65,16 @@ func UpdateIndieApp(db *gorm.DB, timeSleep time.Duration, offset int) {
 
 	languages := []string{"korean", "english"}
 
-	for i := 0; i < len(notCrawledIndieApps); i += offset {
-		notCrawledIndieAppsPartial := notCrawledIndieApps[i*offset : i*offset+offset]
+	loopCount := len(notCrawledIndieApps) / offset
+
+	for i := 0; i <= loopCount; i++ {
+		endSlice := i*offset + offset
+
+		if len(notCrawledIndieApps) < endSlice {
+			endSlice = len(notCrawledIndieApps)
+		}
+
+		notCrawledIndieAppsPartial := notCrawledIndieApps[i*offset : endSlice]
 
 		for _, indieApp := range notCrawledIndieAppsPartial {
 			for _, lang := range languages {
